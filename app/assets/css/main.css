@@ -560,6 +560,18 @@ a { color: inherit; text-decoration: none; }
 .receipt-details { display: grid; align-content: start; gap: 20px; padding: 17px; border-radius: 16px; background: #141415; }
 .receipt-details p { margin: 7px 0 0; color: #a1a1a6; font-size: 10px; line-height: 1.5; overflow-wrap: anywhere; }
 .receipt-finish-button { width: 100%; padding: 13px 18px; }
+.invoice-modal { width: min(1120px, 100%); }
+.invoice-table-wrap { width: 100%; margin-top: 24px; overflow-x: auto; }
+.invoice-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 11px; }
+.invoice-table th { padding: 11px 9px; color: #86868b; font-size: 10px; font-weight: 500; white-space: nowrap; }
+.invoice-table td { padding: 12px 9px; border-top: 1px solid #333336; vertical-align: middle; }
+.invoice-product { display: flex; min-width: 180px; align-items: center; gap: 9px; }
+.invoice-product img { width: 42px; height: 42px; border-radius: 10px; background: #29292b; object-fit: contain; }
+.invoice-totals { display: grid; max-width: 420px; gap: 10px; margin: 24px 0 0 auto; }
+.invoice-totals div { display: flex; justify-content: space-between; gap: 16px; font-size: 12px; }
+.invoice-totals dt, .invoice-totals dd { margin: 0; }
+.invoice-totals dd { text-align: right; }
+.invoice-grand-total { padding-top: 12px; border-top: 1px solid #444447; font-size: 15px !important; font-weight: 600; }
 
 .modal-enter-active, .modal-leave-active, .cart-enter-active, .cart-leave-active { transition: opacity .25s ease; }
 .modal-enter-from, .modal-leave-to, .cart-enter-from, .cart-leave-to { opacity: 0; }
@@ -627,6 +639,7 @@ a { color: inherit; text-decoration: none; }
   .checkout-backdrop, .receipt-backdrop { padding: 10px; }
   .checkout-modal, .receipt-modal { max-height: calc(100vh - 20px); border-radius: 20px; }
   .checkout-modal, .receipt-modal { padding: 22px 16px; }
+  .invoice-table { min-width: 760px; }
   .checkout-layout { gap: 22px; }
   .checkout-summary { padding: 15px; }
   .form-grid-two { grid-template-columns: 1fr; }

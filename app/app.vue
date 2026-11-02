@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import AppFooter from './components/AppFooter.vue'
 import AppHeader from './components/AppHeader.vue'
 import CarritoCompra from './components/CarritoCompra.vue'
+import FacturaCompra from './components/FacturaCompra.vue'
 import HeroBanner from './components/HeroBanner.vue'
 import ListaProductos from './components/ListaProductos.vue'
 
@@ -92,6 +93,9 @@ const productos = ref([
 const carrito = ref([])
 const categoriaActiva = ref('todos')
 const mostrarCarrito = ref(false)
+const mostrarFactura = ref(false)
+const numeroFactura = ref(1)
+const fechaFactura = ref('')
 
 const productosVisibles = computed(() => categoriaActiva.value === 'todos'
   ? productos.value
@@ -127,6 +131,9 @@ const descuentosCarrito = computed(() => itemsCarrito.value.reduce(
 ))
 
 const totalCarrito = computed(() => subtotalCarrito.value - descuentosCarrito.value)
+const numeroFacturaFormateado = computed(
+  () => `FAC-${String(numeroFactura.value).padStart(4, '0')}`,
+)
 
 function agregarProducto(producto) {
   const itemExistente = carrito.value.find(item => item.producto.id === producto.id)
@@ -157,6 +164,26 @@ function cambiarCantidad(id, cambio) {
 function eliminarProducto(id) {
   carrito.value = carrito.value.filter(item => item.producto.id !== id)
 }
+
+function finalizarCompra() {
+  if (!carrito.value.length) return
+
+  fechaFactura.value = new Date().toLocaleString('es-CO', {
+    dateStyle: 'long',
+    timeStyle: 'short',
+  })
+  mostrarCarrito.value = false
+  mostrarFactura.value = true
+}
+
+function nuevaCompra() {
+  carrito.value = []
+  mostrarFactura.value = false
+  numeroFactura.value += 1
+  fechaFactura.value = ''
+  categoriaActiva.value = 'todos'
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
 </script>
 
 <template>
@@ -186,8 +213,16 @@ function eliminarProducto(id) {
       @incrementar="cambiarCantidad($event, 1)"
       @decrementar="cambiarCantidad($event, -1)"
       @eliminar="eliminarProducto"
-      @finalizar-compra="mostrarCarrito = false"
+      @finalizar-compra="finalizarCompra"
       @cerrar="mostrarCarrito = false"
+    />
+
+    <FacturaCompra
+      v-if="mostrarFactura"
+      :items="itemsCarrito"
+      :numero-factura="numeroFacturaFormateado"
+      :fecha="fechaFactura"
+      @nueva-compra="nuevaCompra"
     />
   </div>
 </template>
