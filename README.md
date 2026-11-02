@@ -2,6 +2,13 @@
 
 Tienda de productos Apple desarrollada con Vue 3, Composition API y `<script setup>`. El proyecto conserva el diseño visual de la tienda original y organiza la comunicación entre componentes mediante props y emits.
 
+## Integrantes
+
+- Duvan Felipe Calderin Cabeza
+- Geovanys Stiven Castillo Caldera
+- Mateo Angulo Vertel
+- Karol Bustamente Benitez
+
 ## Requisitos
 
 - Node.js LTS
