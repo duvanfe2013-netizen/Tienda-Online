@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import AppFooter from './components/AppFooter.vue'
 import AppHeader from './components/AppHeader.vue'
 import HeroBanner from './components/HeroBanner.vue'
@@ -87,15 +87,127 @@ const productos = ref([
     categoria: 'accesorios',
   },
 ])
+
+const carrito = ref([])
+const categoriaActiva = ref('todos')
+const mostrarCarrito = ref(false)
+
+const productosVisibles = computed(() => categoriaActiva.value === 'todos'
+  ? productos.value
+  : productos.value.filter(producto => producto.categoria === categoriaActiva.value))
+
+const cantidadItems = computed(() => carrito.value.reduce(
+  (total, item) => total + item.cantidad,
+  0,
+))
+
+function agregarProducto(producto) {
+  const itemExistente = carrito.value.find(item => item.producto.id === producto.id)
+
+  if (itemExistente) {
+    itemExistente.cantidad += 1
+    return
+  }
+
+  carrito.value.push({ producto, cantidad: 1 })
+}
+
+function cambiarCategoria(categoria) {
+  categoriaActiva.value = categoria
+  window.scrollTo({ top: 600, behavior: 'smooth' })
+}
+
+function cambiarCantidad(id, cambio) {
+  const item = carrito.value.find(producto => producto.producto.id === id)
+  if (!item) return
+
+  item.cantidad += cambio
+  if (item.cantidad <= 0) {
+    carrito.value = carrito.value.filter(producto => producto.producto.id !== id)
+  }
+}
+
+function formatearMoneda(valor) {
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    maximumFractionDigits: 0,
+  }).format(valor)
+}
 </script>
 
 <template>
   <div class="store-shell">
-    <AppHeader nombre-tienda="Apple Store" :cantidad-items="0" />
+    <AppHeader
+      nombre-tienda="Apple Store"
+      :cantidad-items="cantidadItems"
+      :categoria-activa="categoriaActiva"
+      @cambiar-categoria="cambiarCategoria"
+      @ver-carrito="mostrarCarrito = true"
+    />
     <main>
       <HeroBanner :producto="productos[0]" />
-      <ListaProductos :productos="productos" />
+      <ListaProductos
+        :productos="productosVisibles"
+        @agregar-producto="agregarProducto"
+      />
     </main>
     <AppFooter nombre-tienda="Apple Store" :anio="2026" contacto="Contacto" />
+
+    <div v-if="mostrarCarrito" class="cart-overlay" @click.self="mostrarCarrito = false">
+      <aside class="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+        <div class="cart-heading">
+          <div>
+            <p class="section-kicker">Tu selección</p>
+            <h2 id="cart-title">Tu bolsa</h2>
+          </div>
+          <button class="cart-close" aria-label="Cerrar carrito" @click="mostrarCarrito = false">×</button>
+        </div>
+        <div class="cart-content">
+          <table v-if="carrito.length" class="cart-table">
+            <thead>
+              <tr>
+                <th scope="col">Producto</th>
+                <th scope="col">Precio</th>
+                <th scope="col">Cantidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in carrito" :key="item.producto.id">
+                <td>
+                  <div class="cart-product">
+                    <img :src="item.producto.imagen" :alt="item.producto.descripcion">
+                    <strong>{{ item.producto.descripcion }}</strong>
+                  </div>
+                </td>
+                <td>{{ formatearMoneda(item.producto.valor) }}</td>
+                <td>
+                  <div class="quantity-control">
+                    <button
+                      :aria-label="`Disminuir cantidad de ${item.producto.descripcion}`"
+                      @click="cambiarCantidad(item.producto.id, -1)"
+                    >
+                      −
+                    </button>
+                    <span>{{ item.cantidad }}</span>
+                    <button
+                      :aria-label="`Aumentar cantidad de ${item.producto.descripcion}`"
+                      @click="cambiarCantidad(item.producto.id, 1)"
+                    >
+                      +
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div v-else class="cart-empty">
+            <span class="empty-bag-icon" aria-hidden="true">⌑</span>
+            <h3>Tu bolsa está esperando.</h3>
+            <p>Descubre algo extraordinario para ti.</p>
+          </div>
+        </div>
+      </aside>
+    </div>
   </div>
 </template>
