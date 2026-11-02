@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import AppFooter from './components/AppFooter.vue'
 import AppHeader from './components/AppHeader.vue'
+import CarritoCompra from './components/CarritoCompra.vue'
 import HeroBanner from './components/HeroBanner.vue'
 import ListaProductos from './components/ListaProductos.vue'
 
@@ -96,10 +97,36 @@ const productosVisibles = computed(() => categoriaActiva.value === 'todos'
   ? productos.value
   : productos.value.filter(producto => producto.categoria === categoriaActiva.value))
 
+const itemsCarrito = computed(() => carrito.value.map((item) => {
+  const valorConDescuento = Math.round(
+    item.producto.valor * (1 - item.producto.descuento / 100),
+  )
+
+  return {
+    ...item,
+    valorUnitario: item.producto.valor,
+    valorConDescuento,
+    descuentoUnitario: item.producto.valor - valorConDescuento,
+    subtotal: valorConDescuento * item.cantidad,
+  }
+}))
+
 const cantidadItems = computed(() => carrito.value.reduce(
   (total, item) => total + item.cantidad,
   0,
 ))
+
+const subtotalCarrito = computed(() => itemsCarrito.value.reduce(
+  (total, item) => total + item.valorUnitario * item.cantidad,
+  0,
+))
+
+const descuentosCarrito = computed(() => itemsCarrito.value.reduce(
+  (total, item) => total + item.descuentoUnitario * item.cantidad,
+  0,
+))
+
+const totalCarrito = computed(() => subtotalCarrito.value - descuentosCarrito.value)
 
 function agregarProducto(producto) {
   const itemExistente = carrito.value.find(item => item.producto.id === producto.id)
@@ -127,12 +154,8 @@ function cambiarCantidad(id, cambio) {
   }
 }
 
-function formatearMoneda(valor) {
-  return new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    maximumFractionDigits: 0,
-  }).format(valor)
+function eliminarProducto(id) {
+  carrito.value = carrito.value.filter(item => item.producto.id !== id)
 }
 </script>
 
@@ -154,60 +177,17 @@ function formatearMoneda(valor) {
     </main>
     <AppFooter nombre-tienda="Apple Store" :anio="2026" contacto="Contacto" />
 
-    <div v-if="mostrarCarrito" class="cart-overlay" @click.self="mostrarCarrito = false">
-      <aside class="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="cart-title">
-        <div class="cart-heading">
-          <div>
-            <p class="section-kicker">Tu selección</p>
-            <h2 id="cart-title">Tu bolsa</h2>
-          </div>
-          <button class="cart-close" aria-label="Cerrar carrito" @click="mostrarCarrito = false">×</button>
-        </div>
-        <div class="cart-content">
-          <table v-if="carrito.length" class="cart-table">
-            <thead>
-              <tr>
-                <th scope="col">Producto</th>
-                <th scope="col">Precio</th>
-                <th scope="col">Cantidad</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="item in carrito" :key="item.producto.id">
-                <td>
-                  <div class="cart-product">
-                    <img :src="item.producto.imagen" :alt="item.producto.descripcion">
-                    <strong>{{ item.producto.descripcion }}</strong>
-                  </div>
-                </td>
-                <td>{{ formatearMoneda(item.producto.valor) }}</td>
-                <td>
-                  <div class="quantity-control">
-                    <button
-                      :aria-label="`Disminuir cantidad de ${item.producto.descripcion}`"
-                      @click="cambiarCantidad(item.producto.id, -1)"
-                    >
-                      −
-                    </button>
-                    <span>{{ item.cantidad }}</span>
-                    <button
-                      :aria-label="`Aumentar cantidad de ${item.producto.descripcion}`"
-                      @click="cambiarCantidad(item.producto.id, 1)"
-                    >
-                      +
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <div v-else class="cart-empty">
-            <span class="empty-bag-icon" aria-hidden="true">⌑</span>
-            <h3>Tu bolsa está esperando.</h3>
-            <p>Descubre algo extraordinario para ti.</p>
-          </div>
-        </div>
-      </aside>
-    </div>
+    <CarritoCompra
+      v-if="mostrarCarrito"
+      :items="itemsCarrito"
+      :subtotal="subtotalCarrito"
+      :descuentos="descuentosCarrito"
+      :total="totalCarrito"
+      @incrementar="cambiarCantidad($event, 1)"
+      @decrementar="cambiarCantidad($event, -1)"
+      @eliminar="eliminarProducto"
+      @finalizar-compra="mostrarCarrito = false"
+      @cerrar="mostrarCarrito = false"
+    />
   </div>
 </template>
